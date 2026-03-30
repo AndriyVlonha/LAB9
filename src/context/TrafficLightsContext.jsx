@@ -1,8 +1,9 @@
 import { createContext, useContext, useEffect, useReducer, useCallback } from 'react'
 
 // ─── Google Apps Script URL ───────────────────────────────────────────────────
-const GAS = 'https://script.google.com/a/macros/chnu.edu.ua/s/AKfycbxEDUmu8naNeY7D4gtwN1xtg3Qyxp3z1s98TaT7LEECjds3yQ9VBukQsKn2x1u7OvOe/exec'
-
+// УВАГА: Якщо у вас помилки CORS, переконайтеся, що при розгортанні скрипта
+// в Google Apps Script ви вказали "У кого є доступ: Усі (Anyone)".
+const GAS = 'https://script.google.com/macros/s/AKfycbyj3DgXUKfDEjzeWb1GpGULd1z7dwH7nhj-h_Dic0wcG0lmegQwYV8NKoF86Ae85-pBlQ/exec'
 // ─── API — всі запити через GET щоб уникнути CORS ────────────────────────────
 const api = {
     getLights: () => fetch(`${GAS}?action=getAllLights`).then(r => r.json()).then(r => r.data),
@@ -18,7 +19,7 @@ function gasToLight(g) {
     return {
         id: g.id,
         name: g.name,
-        orientation: g.orientation || 'vertical',   // ← зберігаємо orientation
+        orientation: g.orientation || 'vertical',
         colors: [
             { id: 'red', label: 'Червоний', hex: '#ff3b3b', clicks: Number(g.redClicks) || 0 },
             { id: 'yellow', label: 'Жовтий', hex: '#ffc107', clicks: Number(g.yellowClicks) || 0 },
@@ -44,6 +45,13 @@ function reducer(state, action) {
 
         case 'ADD_LIGHT':
             return { ...state, lights: [...state.lights, action.light] }
+
+        // ДОДАНО: Оновлення тимчасового ID на справжній з бази даних
+        case 'UPDATE_LIGHT_ID':
+            return {
+                ...state,
+                lights: state.lights.map(l => l.id === action.oldId ? { ...l, id: action.newId } : l)
+            }
 
         case 'REMOVE_LIGHT':
             return { ...state, lights: state.lights.filter(l => l.id !== action.id) }
@@ -89,12 +97,23 @@ export function TrafficLightsProvider({ children }) {
             .catch(() => dispatch({ type: 'INIT', lights: DEFAULT_LIGHTS, settings: DEFAULT_SETTINGS }))
     }, [])
 
-    // Додати світлофор
+    // Додати світлофор (ВИПРАВЛЕНО РОЗСИНХРОНІЗАЦІЮ ID)
     const addLight = useCallback(async () => {
-        const name = `Світлофор #${Date.now()}`
-        const light = { id: Date.now(), name, orientation: 'vertical', colors: DEFAULT_COLORS.map(c => ({ ...c })) }
+        const tempId = Date.now()
+        // Робимо ім'я коротшим, беручи останні 4 цифри timestamp
+        const name = `Світлофор #${tempId.toString().slice(-4)}`
+        const light = { id: tempId, name, orientation: 'vertical', colors: DEFAULT_COLORS.map(c => ({ ...c })) }
+
+        // Оптимістично додаємо в UI
         dispatch({ type: 'ADD_LIGHT', light })
-        try { await api.createLight(name, 'vertical') } catch { /* offline */ }
+
+        try {
+            const response = await api.createLight(name, 'vertical')
+            // Оновлюємо ID на той, що повернув Google Apps Script
+            if (response && response.id) {
+                dispatch({ type: 'UPDATE_LIGHT_ID', oldId: tempId, newId: response.id })
+            }
+        } catch { /* offline */ }
     }, [])
 
     // Видалити світлофор

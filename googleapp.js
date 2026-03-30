@@ -36,14 +36,24 @@ function findRowById(id) {
     return -1
 }
 
+// ── ЄДИНА ТОЧКА ВХОДУ ДЛЯ ВСІХ ЗАПИТІВ (GET) ────────────────
 function doGet(e) {
+    // Захист на випадок прямого відкриття лінки
+    if (!e || !e.parameter) {
+        return ContentService.createTextOutput("Бекенд працює!").setMimeType(ContentService.MimeType.TEXT);
+    }
+
     const action = e.parameter.action
     let result
 
     try {
+        const sheet = getSheet()
+
+        // ── Отримати всі ─────────────────────────────────────────
         if (!action || action === 'getAllLights') {
             result = { status: 'ok', data: getAllLights() }
 
+            // ── Отримати один ────────────────────────────────────────
         } else if (action === 'getLight') {
             const id = e.parameter.id
             const lights = getAllLights()
@@ -55,95 +65,77 @@ function doGet(e) {
                 result = { status: 'ok', data: light }
             }
 
-        } else {
-            result = {
-                status: 'error',
-                message: 'Невідома дія. Доступні: getAllLights, getLight',
-            }
-        }
-    } catch (err) {
-        result = { status: 'error', message: err.toString() }
-    }
-
-    return ContentService
-        .createTextOutput(JSON.stringify(result))
-        .setMimeType(ContentService.MimeType.JSON)
-}
-
-function doPost(e) {
-    let body, result
-
-    try {
-        body = JSON.parse(e.postData.contents)
-    } catch {
-        return ContentService
-            .createTextOutput(JSON.stringify({ status: 'error', message: 'Невалідний JSON' }))
-            .setMimeType(ContentService.MimeType.JSON)
-    }
-
-    try {
-        const { action, id } = body
-        const sheet = getSheet()
-
-        // ── Змінити орієнтацію ───────────────────────────────
-        if (action === 'setOrientation') {
+            // ── Змінити орієнтацію ───────────────────────────────────
+        } else if (action === 'setOrientation') {
+            const id = e.parameter.id
+            const orientation = e.parameter.orientation
             const validOrientations = ['vertical', 'horizontal']
-            if (!validOrientations.includes(body.orientation)) {
+
+            if (!validOrientations.includes(orientation)) {
                 result = { status: 'error', message: 'orientation має бути vertical або horizontal' }
             } else {
                 const row = findRowById(id)
                 if (row === -1) {
                     result = { status: 'error', message: `id=${id} не знайдено` }
                 } else {
-                    sheet.getRange(row, 3).setValue(body.orientation)  // колонка 3 = orientation
-                    result = { status: 'ok', message: `Орієнтацію змінено на ${body.orientation}` }
+                    sheet.getRange(row, 3).setValue(orientation)  // колонка 3 = orientation
+                    result = { status: 'ok', message: `Орієнтацію змінено на ${orientation}` }
                 }
             }
 
-            // ── Змінити активний колір ───────────────────────────
+            // ── Змінити активний колір ───────────────────────────────
         } else if (action === 'setColor') {
+            const id = e.parameter.id
+            const color = e.parameter.color
             const validColors = ['red', 'yellow', 'green']
-            if (!validColors.includes(body.color)) {
+
+            if (!validColors.includes(color)) {
                 result = { status: 'error', message: 'color має бути red, yellow або green' }
             } else {
                 const row = findRowById(id)
                 if (row === -1) {
                     result = { status: 'error', message: `id=${id} не знайдено` }
                 } else {
-                    sheet.getRange(row, 4).setValue(body.color)  // колонка 4 = activeColor
-                    result = { status: 'ok', message: `Активний колір змінено на ${body.color}` }
+                    sheet.getRange(row, 4).setValue(color)  // колонка 4 = activeColor
+                    result = { status: 'ok', message: `Активний колір змінено на ${color}` }
                 }
             }
 
-            // ── Збільшити лічильник кліків ───────────────────────
+            // ── Збільшити лічильник кліків ───────────────────────────
         } else if (action === 'addClick') {
+            const id = e.parameter.id
+            const color = e.parameter.color
             const colorCol = { red: 5, yellow: 6, green: 7 }
-            if (!colorCol[body.color]) {
+
+            if (!colorCol[color]) {
                 result = { status: 'error', message: 'color має бути red, yellow або green' }
             } else {
                 const row = findRowById(id)
                 if (row === -1) {
                     result = { status: 'error', message: `id=${id} не знайдено` }
                 } else {
-                    const col = colorCol[body.color]
+                    const col = colorCol[color]
                     const current = sheet.getRange(row, col).getValue()
                     sheet.getRange(row, col).setValue(current + 1)
-                    result = { status: 'ok', message: `Клік для ${body.color} збережено`, clicks: current + 1 }
+                    result = { status: 'ok', message: `Клік для ${color} збережено`, clicks: current + 1 }
                 }
             }
 
-            // ── Додати новий світлофор ───────────────────────────
+            // ── Додати новий світлофор ───────────────────────────────
         } else if (action === 'addLight') {
             const all = getAllLights()
             const newId = all.length > 0 ? Math.max(...all.map(l => Number(l.id))) + 1 : 1
-            const name = body.name || `Світлофор #${newId}`
-            const orientation = body.orientation || 'vertical'
+            const name = e.parameter.name ? decodeURIComponent(e.parameter.name) : `Світлофор #${newId}`
+            const orientation = e.parameter.orientation || 'vertical'
+
             sheet.appendRow([newId, name, orientation, 'red', 0, 0, 0])
             result = { status: 'ok', message: 'Світлофор додано', id: newId }
 
-            // ── Видалити світлофор ───────────────────────────────
+            // ── Видалити світлофор ───────────────────────────────────
         } else if (action === 'deleteLight') {
+            const id = e.parameter.id
             const row = findRowById(id)
+
             if (row === -1) {
                 result = { status: 'error', message: `id=${id} не знайдено` }
             } else {
@@ -151,10 +143,11 @@ function doPost(e) {
                 result = { status: 'ok', message: `Світлофор id=${id} видалено` }
             }
 
+            // ── Невідома дія ─────────────────────────────────────────
         } else {
             result = {
                 status: 'error',
-                message: 'Невідома дія. Доступні: setOrientation, setColor, addClick, addLight, deleteLight',
+                message: 'Невідома дія. Доступні: getAllLights, getLight, setOrientation, setColor, addClick, addLight, deleteLight',
             }
         }
     } catch (err) {
