@@ -1,0 +1,23 @@
+[
+    {
+        "id": 1,
+        "color": "#ff3b3b",
+        "colorName": "red",
+        "description": "Червоний",
+        "clickcount": 0
+    },
+    {
+        "id": 2,
+        "color": "#ffc107",
+        "colorName": "yellow",
+        "description": "Жовтий",
+        "clickcount": 0
+    },
+    {
+        "id": 3,
+        "color": "#00e676",
+        "colorName": "green",
+        "description": "Зелений",
+        "clickcount": 0
+    }
+]

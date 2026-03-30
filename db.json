@@ -1,0 +1,106 @@
+{
+  "lights": [
+    {
+      "id": "1",
+      "name": "Світлофор #1",
+      "colors": [
+        {
+          "id": "red",
+          "label": "Червоний",
+          "hex": "#ff3b3b",
+          "clicks": 7
+        },
+        {
+          "id": "yellow",
+          "label": "Жовтий",
+          "hex": "#ffc107",
+          "clicks": 8
+        },
+        {
+          "id": "green",
+          "label": "Зелений",
+          "hex": "#00e676",
+          "clicks": 10
+        }
+      ]
+    },
+    {
+      "name": "Світлофор #1774246218991",
+      "colors": [
+        {
+          "id": "red",
+          "label": "Червоний",
+          "hex": "#ff3b3b",
+          "clicks": 7
+        },
+        {
+          "id": "yellow",
+          "label": "Жовтий",
+          "hex": "#ffc107",
+          "clicks": 10
+        },
+        {
+          "id": "green",
+          "label": "Зелений",
+          "hex": "#00e676",
+          "clicks": 7
+        }
+      ],
+      "id": "nY5uXGbZ96g"
+    },
+    {
+      "name": "Світлофор #1774246220817",
+      "colors": [
+        {
+          "id": "red",
+          "label": "Червоний",
+          "hex": "#ff3b3b",
+          "clicks": 5
+        },
+        {
+          "id": "yellow",
+          "label": "Жовтий",
+          "hex": "#ffc107",
+          "clicks": 8
+        },
+        {
+          "id": "green",
+          "label": "Зелений",
+          "hex": "#00e676",
+          "clicks": 7
+        }
+      ],
+      "id": "kPStozhMwbw"
+    },
+    {
+      "name": "Світлофор #1774246565816",
+      "colors": [
+        {
+          "id": "red",
+          "label": "Червоний",
+          "hex": "#ff3b3b",
+          "clicks": 4
+        },
+        {
+          "id": "yellow",
+          "label": "Жовтий",
+          "hex": "#ffc107",
+          "clicks": 4
+        },
+        {
+          "id": "green",
+          "label": "Зелений",
+          "hex": "#00e676",
+          "clicks": 3
+        }
+      ],
+      "id": "7S6w6qs"
+    }
+  ],
+  "settings": {
+    "id": 1,
+    "blinkCount": 3,
+    "brightness": 1
+  },
+  "$schema": "./node_modules/json-server/schema.json"
+}

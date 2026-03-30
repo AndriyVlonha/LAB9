@@ -1,0 +1,108 @@
+.header {
+    border-bottom: 1px solid rgba(255, 255, 255, .2);
+    padding: 0 40px;
+    background: rgba(50, 30, 120, .45);
+    backdrop-filter: blur(24px);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+}
+
+.header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.header-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-icon {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 6px 5px;
+    background: rgba(255, 255, 255, .12);
+    border: 1px solid rgba(255, 255, 255, .2);
+    border-radius: 8px;
+}
+
+.header-icon span {
+    display: block;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    box-shadow: 0 0 5px currentColor;
+}
+
+.header-eyebrow {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    /* bright white with shadow for visibility on any gradient */
+    color: #fff;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, .5);
+    margin-bottom: 1px;
+}
+
+.header-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -.2px;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, .45);
+    display: block;
+}
+
+.header-nav {
+    display: flex;
+    gap: 4px;
+}
+
+.nav-link {
+    font-size: 13px;
+    font-weight: 500;
+    padding: 6px 16px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    /* white text always */
+    color: rgba(255, 255, 255, .85);
+    text-decoration: none;
+    transition: all .2s;
+}
+
+.nav-link:hover {
+    border-color: rgba(255, 255, 255, .4);
+    color: #fff;
+    background: rgba(255, 255, 255, .12);
+}
+
+.nav-link.active {
+    border-color: #fff;
+    color: #fff;
+    background: rgba(255, 255, 255, .18);
+    font-weight: 600;
+}
+
+@media (max-width: 600px) {
+    .header {
+        padding: 0 16px;
+    }
+
+    .header-eyebrow {
+        display: none;
+    }
+
+    .nav-link {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+}
