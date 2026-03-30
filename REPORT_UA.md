@@ -1,268 +1,157 @@
-# Звіт з лабораторної роботи №8
+# Звіт з лабораторної роботи №9
 
 **Студент:** Влонга Андрій  
 **Група:** 42-КН  
-**Дата:** 23/03/2026
+**Дата:** 29/03/2026
 
 ---
 
 ## Мета роботи
 
-Створити API засобами Google Apps Script. Реалізувати управління станами світлофора та отримання списку всіх світлофорів. Дана робота є продовженням лабораторної роботи №7.
+Перенести логіку проєкту з попередньої лабораторної роботи (взаємодія з Google Apps Script API), інтегрувати бібліотеку компонентів DaisyUI для стилізації інтерфейсу та здійснити розгортання (деплой) готового веб-додатка на платформі Netlify.
 
 ---
 
 ## Хід виконання роботи
 
----
+### 1. Перенесення проєкту на основі Lab 8
 
-### 1. Створення проєкту на основі Lab 7
+Роботу розпочато зі створення нової директорії та копіювання вихідного коду попередньої лабораторної роботи, яка містить налаштований React-додаток та підключення до Google Sheets API.
 
 ```bash
-# Скопіювати lab7 як основу
-xcopy /E /I LAB7\lab7 LAB8\lab8
-cd LAB8\lab8
+# Скопіювати lab8 як основу
+xcopy /E /I LAB8\lab8 LAB9\lab9
+cd LAB9\lab9
 git init
 ```
 
-В корені проєкту створено файл `googleapp.js` з кодом API.
+### 2. Встановлення Tailwind CSS та DaisyUI
 
----
-
-### 2. Структура проєкту
-
-```
-lab8/
-├── googleapp.js          ← КОД API (Google Apps Script)
-├── README.md
-├── db.json
-├── src/
-│   ├── context/
-│   │   └── TrafficLightsContext.jsx
-│   ├── components/
-│   └── Pages/
-```
-
-**Скріншот:**
-<div align="center">
-  <figure>
-    <img src="Images/project_structure.png" width="60%" alt="Project Structure"/>
-    <br/>
-    <sub><b>Рис. 1:</b> Структура проєкту з файлом googleapp.js</sub>
-  </figure>
-</div>
-
----
-
-### 3. База даних — Google Sheets
-
-Дані зберігаються в Google Sheets. Аркуш `TrafficLights` створюється автоматично при першому запуску.
-
-**Структура таблиці:**
-
-| id | name | orientation | activeColor | redClicks | yellowClicks | greenClicks |
-|----|------|-------------|-------------|-----------|--------------|-------------|
-| 1 | Світлофор #1 | vertical | red | 0 | 0 | 0 |
-| 2 | Світлофор #2 | horizontal | green | 0 | 0 | 0 |
-
-**Скріншот:**
-<div align="center">
-  <figure>
-    <img src="Images/google_sheets.png" width="80%" alt="Google Sheets"/>
-    <br/>
-    <sub><b>Рис. 2:</b> Google Sheets як база даних</sub>
-  </figure>
-</div>
-
----
-
-### 4. Реалізація API (googleapp.js)
-
-**Файл: `googleapp.js`**
-
-#### GET запити — `doGet(e)`
-
-```javascript
-function doGet(e) {
-  const action = e.parameter.action
-
-  if (action === 'getAllLights') {
-    // Повертає список всіх світлофорів
-    return jsonResponse({ status: 'ok', data: getAllLights() })
-
-  } else if (action === 'getLight') {
-    // Повертає один світлофор по id
-    const light = getAllLights().find(l => String(l.id) === e.parameter.id)
-    return jsonResponse({ status: 'ok', data: light })
-  }
-}
-```
-
-#### POST запити — `doPost(e)`
-
-```javascript
-function doPost(e) {
-  const body = JSON.parse(e.postData.contents)
-
-  if (body.action === 'setOrientation') {
-    // Змінює орієнтацію: vertical / horizontal
-    sheet.getRange(row, 3).setValue(body.orientation)
-
-  } else if (body.action === 'setColor') {
-    // Змінює активний колір: red / yellow / green
-    sheet.getRange(row, 4).setValue(body.color)
-
-  } else if (body.action === 'addClick') {
-    // Збільшує лічильник кліків для кольору
-    const current = sheet.getRange(row, col).getValue()
-    sheet.getRange(row, col).setValue(current + 1)
-
-  } else if (body.action === 'addLight') {
-    // Додає новий світлофор
-    sheet.appendRow([newId, name, orientation, 'red', 0, 0, 0])
-
-  } else if (body.action === 'deleteLight') {
-    // Видаляє світлофор
-    sheet.deleteRow(row)
-  }
-}
-```
-
-**Скріншот:**
-<div align="center">
-  <figure>
-    <img src="Images/apps_script_code.png" width="80%" alt="Apps Script Code"/>
-    <br/>
-    <sub><b>Рис. 3:</b> Код API в редакторі Google Apps Script</sub>
-  </figure>
-</div>
-
----
-
-### 5. Деплой API
-
-**Кроки:**
-1. Google Sheets → Extensions → Apps Script
-2. Вставити вміст `googleapp.js`
-3. Deploy → New deployment → Web App
-4. Execute as: **Me** | Who has access: **Anyone**
-5. Скопіювати URL деплою
-
-**Скріншот:**
-<div align="center">
-  <figure>
-    <img src="Images/deploy.png" width="80%" alt="Deploy"/>
-    <br/>
-    <sub><b>Рис. 4:</b> Деплой Web App в Google Apps Script</sub>
-  </figure>
-</div>
-
----
-
-### 6. Тестування API
-
-**GET — список всіх світлофорів:**
-
-```
-https://script.google.com/a/macros/chnu.edu.ua/s/AKfycbxEDUmu8naNeY7D4gtwN1xtg3Qyxp3z1s98TaT7LEECjds3yQ9VBukQsKn2x1u7OvOe/exec?action=getAllLights
-```
-
-**Відповідь:**
-```json
-{
-  "status": "ok",
-  "data": [
-    {
-      "id": 1,
-      "name": "Світлофор #1",
-      "orientation": "vertical",
-      "activeColor": "red",
-      "redClicks": 5,
-      "yellowClicks": 3,
-      "greenClicks": 7
-    }
-  ]
-}
-```
-
-**POST — змінити орієнтацію:**
-
-```json
-{ "action": "setOrientation", "id": 1, "orientation": "horizontal" }
-```
-
-**POST — змінити активний колір:**
-
-```json
-{ "action": "setColor", "id": 1, "color": "green" }
-```
-
-**Скріншот:**
-<div align="center">
-  <figure>
-    <img src="Images/api_test.png" width="80%" alt="API Test"/>
-    <br/>
-    <sub><b>Рис. 5:</b> Тестування API через браузер</sub>
-  </figure>
-</div>
-
----
-
-### 7. Запуск проєкту
+Для стилізації проєкту було обрано фреймворк Tailwind CSS та плагін компонентів DaisyUI. Встановлення здійснено через менеджер пакетів npm.
 
 ```bash
-npm run start
+# Встановлення Tailwind CSS та його залежностей
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+
+# Встановлення DaisyUI
+npm i -D daisyui@latest
 ```
 
-**Скріншот:**
-<div align="center">
-  <figure>
-    <img src="Images/run_dev.png" width="80%" alt="Running"/>
-    <br/>
-    <sub><b>Рис. 6:</b> Запуск проєкту</sub>
-  </figure>
+### 3. Налаштування конфігурації стилів
+
+Файл `tailwind.config.js` було оновлено для підтримки файлів React та підключення плагіну DaisyUI.
+
+**Файл:** `tailwind.config.js`
+
+```javascript
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [
+    require('daisyui'),
+  ],
+  // Налаштування теми DaisyUI (за бажанням)
+  daisyui: {
+    themes: ["light", "dark", "cupcake"],
+  },
+}
+```
+
+Головний файл стилів `index.css` було очищено від старого CSS і додано директиви Tailwind:
+
+**Файл:** `index.css`
+
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
+
+### 4. Стилізація проєкту за допомогою DaisyUI
+
+Старі CSS-класи були замінені на утиліти Tailwind та готові компоненти DaisyUI. Наприклад, для кнопок, карток та контейнерів використано такі класи:
+
+- **Кнопки:** `btn`, `btn-primary`, `btn-outline`
+- **Картки світлофорів:** `card`, `bg-base-100`, `shadow-xl`
+- **Лейаут:** `container`, `mx-auto`, `grid`, `flex`, `gap-4`
+
+Приклад оновленого компонента:
+
+```javascript
+<div className="card w-96 bg-base-100 shadow-xl">
+  <div className="card-body items-center text-center">
+    <h2 className="card-title">{light.name}</h2>
+    <div className="flex gap-2">
+      <button className="btn btn-error" onClick={() => clickColor(light.id, 'red')}>Червоний</button>
+      <button className="btn btn-warning" onClick={() => clickColor(light.id, 'yellow')}>Жовтий</button>
+      <button className="btn btn-success" onClick={() => clickColor(light.id, 'green')}>Зелений</button>
+    </div>
+  </div>
 </div>
+```
+
+### 5. Розгортання (деплой) на Netlify
+
+Для публікації додатка в інтернеті використано платформу Netlify.
+
+Кроки розгортання:
+
+1. Створено фінальну збірку проєкту локально за допомогою команди:
+
+```bash
+npm run build
+```
+
+2. Утворену папку `dist` (або `build`) завантажено на платформу Netlify (шляхом drag-and-drop або через прив'язку GitHub репозиторію).
+
+3. Налаштовано перенаправлення (`Redirects`) для коректної роботи React Router (за необхідності).
+
+4. Отримано публічне посилання на робочий додаток.
+
+### 6. Завантаження коду в GitHub Classroom
+
+Після успішного тестування задеплоєного додатка всі зміни були збережені та відправлені у віддалений репозиторій GitHub Classroom.
+
+```bash
+git add .
+git commit -m "feat: added daisyui, styled components and prepared for netlify deploy"
+git push origin main
+```
 
 ---
 
 ## Результати роботи
 
-### Реалізовані функції:
+Реалізовані функції та покращення:
 
-1. **GET /getAllLights** — список всіх світлофорів з поточним станом
-2. **GET /getLight?id=1** — отримати один світлофор
-3. **POST setOrientation** — змінити орієнтацію (vertical/horizontal)
-4. **POST setColor** — змінити активний колір (red/yellow/green)
-5. **POST addClick** — збільшити лічильник кліків
-6. **POST addLight** — додати новий світлофор
-7. **POST deleteLight** — видалити світлофор
-
-### Технічні деталі:
-
-- **Google Apps Script:** `doGet(e)`, `doPost(e)`, `ContentService`
-- **Google Sheets:** `SpreadsheetApp`, `getSheet()`, `appendRow()`, `deleteRow()`
-- **REST API:** JSON відповіді з полями `status`, `data`, `message`
-- **Валідація:** перевірка допустимих значень orientation та color
+- **Міграція логіки:** повністю збережено працездатність API (зчитування, додавання, видалення світлофорів, збереження кліків у Google Sheets).
+- **DaisyUI & Tailwind CSS:** інтерфейс додатка повністю переписано з використанням сучасних компонентних підходів без написання "сирого" CSS.
+- **Адаптивність:** завдяки утилітам Tailwind додаток коректно відображається на мобільних та десктопних пристроях.
+- **Публікація:** додаток доступний онлайн 24/7 на платформі Netlify. Усі запити до Google Apps Script працюють коректно, проблеми з CORS налаштовані.
 
 ---
 
 ## Висновки
 
 У ході виконання лабораторної роботи було успішно:
-- Створено API засобами Google Apps Script
-- Реалізовано GET та POST обробники
-- Реалізовано управління станами світлофора (орієнтація, колір)
-- Реалізовано список усіх світлофорів з поточним станом
-- Задеплоєно Web App та протестовано API
-- Google Sheets використовується як база даних
+
+- набутo практичних навичок роботи з UI-бібліотекою DaisyUI та фреймворком Tailwind CSS;
+- проведено рефакторинг візуальної частини проєкту зі збереженням бізнес-логіки (роботи з API);
+- опановано процес розгортання (деплою) frontend-додатка на платформі Netlify;
+- закріплено навички роботи з системою контролю версій Git та GitHub Classroom.
 
 ---
 
 ## Посилання
 
-- Репозиторій GitHub: [посилання](https://github.com/AndriyVlonha/Lab8_WEB)
-- Опублікований API: [посилання](https://script.google.com/a/macros/chnu.edu.ua/s/AKfycbxEDUmu8naNeY7D4gtwN1xtg3Qyxp3z1s98TaT7LEECjds3yQ9VBukQsKn2x1u7OvOe/exec?action=getAllLights)
-- Google Apps Script: https://developers.google.com/apps-script
-- ContentService: https://developers.google.com/apps-script/reference/content
-
----
+- **Опублікований додаток (Netlify):** [https://lab9webprogramming.netlify.app/](https://lab9webprogramming.netlify.app/)
+- **Репозиторій GitHub:** [https://github.com/AndriyVlonha/LAB9](https://github.com/AndriyVlonha/LAB9)
+- **Документація DaisyUI:** https://daisyui.com/
+- **Документація Tailwind CSS:** https://tailwindcss.com/
