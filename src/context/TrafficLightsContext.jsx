@@ -1,10 +1,6 @@
 import { createContext, useContext, useEffect, useReducer, useCallback } from 'react'
 
-// ─── Google Apps Script URL ───────────────────────────────────────────────────
-// УВАГА: Якщо у вас помилки CORS, переконайтеся, що при розгортанні скрипта
-// в Google Apps Script ви вказали "У кого є доступ: Усі (Anyone)".
 const GAS = 'https://script.google.com/macros/s/AKfycbyj3DgXUKfDEjzeWb1GpGULd1z7dwH7nhj-h_Dic0wcG0lmegQwYV8NKoF86Ae85-pBlQ/exec'
-// ─── API — всі запити через GET щоб уникнути CORS ────────────────────────────
 const api = {
     getLights: () => fetch(`${GAS}?action=getAllLights`).then(r => r.json()).then(r => r.data),
     addClick: (id, color) => fetch(`${GAS}?action=addClick&id=${id}&color=${color}`).then(r => r.json()),
