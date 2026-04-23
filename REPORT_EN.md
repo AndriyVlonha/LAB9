@@ -1,7 +1,7 @@
 # Examination Work Report
 
 **Student:** Andriy Vlonha  
-**Group:** 42-KN  
+**Group:** 42-CS
 **Date:** 24/04/2026
 
 ---
