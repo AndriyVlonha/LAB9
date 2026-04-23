@@ -1,9 +1,12 @@
 import { useCallback, useRef, useState } from 'react'
 import { motion, animate } from 'framer-motion'
 
-const Lamp = ({ color, blinkCount, brightness, onClick }) => {
+const Lamp = ({ color, blinkCount, brightness, onClick, active }) => {
     const [blinking, setBlinking] = useState(false)
     const lampRef = useRef(null)
+
+    // Яскравість: активна лампа = повна, неактивна = тьмяна
+    const lampBrightness = active ? brightness : brightness * 0.12
 
     const handleClick = useCallback(async () => {
         if (blinking) return
@@ -32,7 +35,7 @@ const Lamp = ({ color, blinkCount, brightness, onClick }) => {
             onClick={handleClick}
             title={`${color.label} — кліків: ${color.clicks}`}
         >
-            {/* socket */}
+            {/* Підкладка */}
             <div className="absolute inset-[-4px] rounded-full"
                 style={{
                     background: 'radial-gradient(circle at 40% 35%, #0c0d18 0%, #070810 70%)',
@@ -40,36 +43,39 @@ const Lamp = ({ color, blinkCount, brightness, onClick }) => {
                     boxShadow: 'inset 0 2px 8px rgba(0,0,0,.9)',
                 }} />
 
-            {/* lamp */}
+            {/* Лампа */}
             <div
                 ref={lampRef}
-                className="absolute inset-0 rounded-full z-10"
+                className="absolute inset-0 rounded-full z-10 transition-opacity duration-500"
                 style={{
                     background: `radial-gradient(circle at 34% 27%,
             color-mix(in srgb, ${color.hex} 28%, white) 0%,
             ${color.hex} 38%,
             color-mix(in srgb, ${color.hex} 52%, black) 72%,
             color-mix(in srgb, ${color.hex} 28%, black) 100%)`,
-                    boxShadow: `0 0 16px color-mix(in srgb, ${color.hex} 52%, transparent),
+                    boxShadow: active
+                        ? `0 0 16px color-mix(in srgb, ${color.hex} 52%, transparent),
                       0 0 48px color-mix(in srgb, ${color.hex} 22%, transparent),
                       inset 0 -3px 6px rgba(0,0,0,.45),
-                      inset 0 2px 4px rgba(255,255,255,.1)`,
-                    opacity: brightness,
-                    filter: brightness < 0.85 ? `brightness(${0.55 + brightness * 0.5})` : 'none',
+                      inset 0 2px 4px rgba(255,255,255,.1)`
+                        : 'inset 0 -3px 6px rgba(0,0,0,.45)',
+                    opacity: lampBrightness,
+                    filter: lampBrightness < 0.85 ? `brightness(${0.55 + lampBrightness * 0.5})` : 'none',
                 }}
             />
 
-            {/* specular */}
+            {/* Блік */}
             <div className="absolute z-20 rounded-full pointer-events-none"
                 style={{
                     top: '13%', left: '17%', width: '30%', height: '18%',
-                    background: 'rgba(255,255,255,.2)', filter: 'blur(3px)'
+                    background: 'rgba(255,255,255,.2)', filter: 'blur(3px)',
+                    opacity: active ? 1 : 0.3,
                 }} />
         </motion.div>
     )
 }
 
-const TrafficLights = ({ colors = [], orientation = 'vertical', onLightClick, blinkCount = 3, brightness = 1 }) => {
+const TrafficLights = ({ colors = [], orientation = 'vertical', onLightClick, blinkCount = 3, brightness = 1, activeColor = null }) => {
     const isH = orientation === 'horizontal'
 
     return (
@@ -85,7 +91,7 @@ const TrafficLights = ({ colors = [], orientation = 'vertical', onLightClick, bl
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ type: 'spring', stiffness: 260, damping: 22 }}
             >
-                {/* bolts */}
+                {/* Болти */}
                 {isH ? (
                     <>
                         <div className="absolute left-2 top-1/2 -translate-y-1/2 w-[7px] h-[7px] rounded-full bg-[#131520] border border-[#1e2238]" />
@@ -100,7 +106,8 @@ const TrafficLights = ({ colors = [], orientation = 'vertical', onLightClick, bl
 
                 {colors.map(color => (
                     <Lamp key={color.id} color={color} blinkCount={blinkCount}
-                        brightness={brightness} onClick={onLightClick} />
+                        brightness={brightness} onClick={onLightClick}
+                        active={activeColor === null || activeColor === color.id} />
                 ))}
             </motion.div>
         </div>

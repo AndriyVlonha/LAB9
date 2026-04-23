@@ -1,16 +1,29 @@
-# React + Vite
+# Проєкт: Світлофор + Формула-1 (Lab 9 / Залікова робота)
+## Основний функціонал
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+1. **Автомобільні світлофори**
+   - Перемикання в автоматичному або ручному режимах.
+   - Повний реалістичний цикл: *Зелений ➔ Жовтий ➔ Червоний ➔ Жовтий ➔ Зелений*.
+   - Можливість налаштувати інтервал для **кожного** кольору окремо.
 
-Currently, two official plugins are available:
+2. **Світлофор Формула-1 (F1)**
+   - Синхронізований з автомобільним: якщо для авто горить Зелений, F1 автоматично переходить у статус червоного ("Заблоковано").
+   - Власні налаштування скільки секунд показувати зелений (Старт) та червоний (Стоп) кольори.
+   - Відображення плавної смужки прогресу та відліку часу.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+3. **Звуковий супровід (Web Audio API)**
+   - Звуки перемикання "реле" для звичайного світлофора (короткий різкий клік).
+   - Характерний звук відліку для F1 (серія високих пісків) та тривалий бас/гудок на старт.
+   - Налаштування звуку роздільні: можна включити тільки для авто або тільки для F1.
 
-## React Compiler
+4. **Хмарна синхронізація та Статистика**
+   - Бекенд на базі **Google Apps Script (Google Sheets)**.
+   - Окремий аркуш `Stats` для збереження загальних підрахунків (скільки разів перемкнули F1, скільки автоциклів пройшло).
+   - Вбудована система реєстрації та авторизації (`Users` sheet).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠 Технологічний стек
+- **Frontend:** React, Vite, Framer Motion (для анімацій), Tailwind CSS, DaisyUI.
+- **Backend:** Google Apps Script (REST API).
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Скріншоти та Демонстрація
+*Скріншоти можна знайти у звіті `REPORT_UA.md`.*

@@ -12,7 +12,7 @@ const StatsBar = ({ clicks, blinkCount, brightness, onBlinkChange, onBrightnessC
     return (
         <div className="stats-bar">
 
-            {/* ── Лічильники кліків ── */}
+            {/* Лічильники */}
             <div className="stats-counts">
                 {COLORS.map(({ key, label, hex }) => (
                     <div key={key} className="stats-item">
@@ -28,7 +28,7 @@ const StatsBar = ({ clicks, blinkCount, brightness, onBlinkChange, onBrightnessC
                 </div>
             </div>
 
-            {/* ── Слайдери — Lab6 ── */}
+            {/* Слайдери */}
             <div className="stats-controls">
 
                 <label className="ctrl-group">

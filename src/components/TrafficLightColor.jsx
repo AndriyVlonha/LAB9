@@ -12,7 +12,6 @@ export default function TrafficLightColor({ lightId, color, settings, onClick })
         const el = document.getElementById(`lamp-${lightId}-${color.id}`)
         if (!el) { setBlinking(false); return }
 
-        // animate brightness: full → dim → full, N times
         const bright = settings.brightness
         const frames = [bright]
         for (let i = 0; i < settings.blinkCount; i++) frames.push(0.07, bright)
@@ -24,12 +23,10 @@ export default function TrafficLightColor({ lightId, color, settings, onClick })
         setBlinking(false)
     }, [blinking, lightId, color.id, settings, onClick])
 
-    // brightness: dim the lamp visually via opacity + filter
     const bright = settings.brightness
     const lampStyle = {
         '--color': color.hex,
         opacity: bright,
-        // scale glow based on brightness
         filter: bright < 0.85
             ? `brightness(${0.6 + bright * 0.45})`
             : 'none',

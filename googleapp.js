@@ -1,10 +1,23 @@
 const SHEET_NAME = 'TrafficLights'
+const USERS_SHEET = 'Users'
+const STATS_SHEET = 'Stats'
+
+function getStatsSheet() {
+    const ss = SpreadsheetApp.getActiveSpreadsheet()
+    let sheet = ss.getSheetByName(STATS_SHEET)
+
+    if (!sheet) {
+        sheet = ss.insertSheet(STATS_SHEET)
+        sheet.appendRow(['f1Toggles', 'carCycles'])
+        sheet.appendRow([0, 0])
+    }
+    return sheet
+}
 
 function getSheet() {
     const ss = SpreadsheetApp.getActiveSpreadsheet()
     let sheet = ss.getSheetByName(SHEET_NAME)
 
-    // Якщо аркуша немає — створити з початковими даними
     if (!sheet) {
         sheet = ss.insertSheet(SHEET_NAME)
         sheet.appendRow(['id', 'name', 'orientation', 'activeColor', 'redClicks', 'yellowClicks', 'greenClicks'])
@@ -14,7 +27,31 @@ function getSheet() {
     return sheet
 }
 
-// ── Читання всіх рядків як масив об'єктів ───────────────────
+// Аркуш користувачів
+function getUsersSheet() {
+    const ss = SpreadsheetApp.getActiveSpreadsheet()
+    let sheet = ss.getSheetByName(USERS_SHEET)
+
+    if (!sheet) {
+        sheet = ss.insertSheet(USERS_SHEET)
+        sheet.appendRow(['username', 'password', 'createdAt'])
+    }
+    return sheet
+}
+
+// Знайти користувача за логіном
+function findUser(username) {
+    const sheet = getUsersSheet()
+    const data = sheet.getDataRange().getValues()
+    for (let i = 1; i < data.length; i++) {
+        if (String(data[i][0]) === String(username)) {
+            return { username: data[i][0], password: data[i][1], row: i + 1 }
+        }
+    }
+    return null
+}
+
+// Читання всіх світлофорів
 function getAllLights() {
     const sheet = getSheet()
     const rows = sheet.getDataRange().getValues()
@@ -26,7 +63,7 @@ function getAllLights() {
     })
 }
 
-// ── Знайти рядок по id (повертає номер рядка, 1-based) ──────
+// Знайти рядок по id
 function findRowById(id) {
     const sheet = getSheet()
     const data = sheet.getDataRange().getValues()
@@ -36,9 +73,8 @@ function findRowById(id) {
     return -1
 }
 
-// ── ЄДИНА ТОЧКА ВХОДУ ДЛЯ ВСІХ ЗАПИТІВ (GET) ────────────────
+// Головний обробник
 function doGet(e) {
-    // Захист на випадок прямого відкриття лінки
     if (!e || !e.parameter) {
         return ContentService.createTextOutput("Бекенд працює!").setMimeType(ContentService.MimeType.TEXT);
     }
@@ -49,11 +85,42 @@ function doGet(e) {
     try {
         const sheet = getSheet()
 
-        // ── Отримати всі ─────────────────────────────────────────
-        if (!action || action === 'getAllLights') {
+        // Реєстрація
+        if (action === 'register') {
+            const username = e.parameter.username
+            const password = e.parameter.password
+
+            if (!username || !password) {
+                result = { status: 'error', message: 'Логін і пароль обовʼязкові' }
+            } else if (findUser(username)) {
+                result = { status: 'error', message: 'Користувач вже існує' }
+            } else {
+                const usersSheet = getUsersSheet()
+                usersSheet.appendRow([username, password, new Date().toISOString()])
+                result = { status: 'ok', message: 'Зареєстровано', user: { username } }
+            }
+
+        // Авторизація
+        } else if (action === 'login') {
+            const username = e.parameter.username
+            const password = e.parameter.password
+
+            if (!username || !password) {
+                result = { status: 'error', message: 'Логін і пароль обовʼязкові' }
+            } else {
+                const user = findUser(username)
+                if (!user || String(user.password) !== String(password)) {
+                    result = { status: 'error', message: 'Невірний логін або пароль' }
+                } else {
+                    result = { status: 'ok', message: 'Авторизовано', user: { username: user.username } }
+                }
+            }
+
+        // Отримати всі світлофори
+        } else if (!action || action === 'getAllLights') {
             result = { status: 'ok', data: getAllLights() }
 
-            // ── Отримати один ────────────────────────────────────────
+        // Отримати один світлофор
         } else if (action === 'getLight') {
             const id = e.parameter.id
             const lights = getAllLights()
@@ -65,43 +132,41 @@ function doGet(e) {
                 result = { status: 'ok', data: light }
             }
 
-            // ── Змінити орієнтацію ───────────────────────────────────
+        // Змінити орієнтацію
         } else if (action === 'setOrientation') {
             const id = e.parameter.id
             const orientation = e.parameter.orientation
-            const validOrientations = ['vertical', 'horizontal']
 
-            if (!validOrientations.includes(orientation)) {
+            if (!['vertical', 'horizontal'].includes(orientation)) {
                 result = { status: 'error', message: 'orientation має бути vertical або horizontal' }
             } else {
                 const row = findRowById(id)
                 if (row === -1) {
                     result = { status: 'error', message: `id=${id} не знайдено` }
                 } else {
-                    sheet.getRange(row, 3).setValue(orientation)  // колонка 3 = orientation
+                    sheet.getRange(row, 3).setValue(orientation)
                     result = { status: 'ok', message: `Орієнтацію змінено на ${orientation}` }
                 }
             }
 
-            // ── Змінити активний колір ───────────────────────────────
+        // Змінити колір
         } else if (action === 'setColor') {
             const id = e.parameter.id
             const color = e.parameter.color
-            const validColors = ['red', 'yellow', 'green']
 
-            if (!validColors.includes(color)) {
+            if (!['red', 'yellow', 'green'].includes(color)) {
                 result = { status: 'error', message: 'color має бути red, yellow або green' }
             } else {
                 const row = findRowById(id)
                 if (row === -1) {
                     result = { status: 'error', message: `id=${id} не знайдено` }
                 } else {
-                    sheet.getRange(row, 4).setValue(color)  // колонка 4 = activeColor
+                    sheet.getRange(row, 4).setValue(color)
                     result = { status: 'ok', message: `Активний колір змінено на ${color}` }
                 }
             }
 
-            // ── Збільшити лічильник кліків ───────────────────────────
+        // Клік
         } else if (action === 'addClick') {
             const id = e.parameter.id
             const color = e.parameter.color
@@ -121,7 +186,7 @@ function doGet(e) {
                 }
             }
 
-            // ── Додати новий світлофор ───────────────────────────────
+        // Додати світлофор
         } else if (action === 'addLight') {
             const all = getAllLights()
             const newId = all.length > 0 ? Math.max(...all.map(l => Number(l.id))) + 1 : 1
@@ -131,7 +196,7 @@ function doGet(e) {
             sheet.appendRow([newId, name, orientation, 'red', 0, 0, 0])
             result = { status: 'ok', message: 'Світлофор додано', id: newId }
 
-            // ── Видалити світлофор ───────────────────────────────────
+        // Видалити світлофор
         } else if (action === 'deleteLight') {
             const id = e.parameter.id
             const row = findRowById(id)
@@ -143,11 +208,36 @@ function doGet(e) {
                 result = { status: 'ok', message: `Світлофор id=${id} видалено` }
             }
 
-            // ── Невідома дія ─────────────────────────────────────────
+        // F1 Stats actions
+        } else if (action === 'addF1Toggle') {
+            const sheet = getStatsSheet()
+            const val = Number(sheet.getRange(2, 1).getValue() || 0) + 1
+            sheet.getRange(2, 1).setValue(val)
+            result = { status: 'ok', message: 'F1 Toggles++', val }
+
+        } else if (action === 'addCarCycle') {
+            const sheet = getStatsSheet()
+            const val = Number(sheet.getRange(2, 2).getValue() || 0) + 1
+            sheet.getRange(2, 2).setValue(val)
+            result = { status: 'ok', message: 'Car Cycles++', val }
+
+        } else if (action === 'resetF1Stats') {
+            const sheet = getStatsSheet()
+            sheet.getRange(2, 1).setValue(0)
+            sheet.getRange(2, 2).setValue(0)
+            result = { status: 'ok', message: 'F1 Stats скинуто' }
+
+        } else if (action === 'getF1Stats') {
+            const sheet = getStatsSheet()
+            const f1Toggles = Number(sheet.getRange(2, 1).getValue() || 0)
+            const carCycles = Number(sheet.getRange(2, 2).getValue() || 0)
+            result = { status: 'ok', data: { f1Toggles, carCycles } }
+
+        // Невідома дія
         } else {
             result = {
                 status: 'error',
-                message: 'Невідома дія. Доступні: getAllLights, getLight, setOrientation, setColor, addClick, addLight, deleteLight',
+                message: 'Невідома дія. Доступні: register, login, getAllLights, getLight, setOrientation, setColor, addClick, addLight, deleteLight',
             }
         }
     } catch (err) {

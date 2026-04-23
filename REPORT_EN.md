@@ -1,154 +1,85 @@
-# Lab Work Report №9
+# Examination Work Report
 
 **Student:** Andriy Vlonha  
 **Group:** 42-KN  
-**Date:** 29/03/2026
+**Date:** 24/04/2026
 
 ---
 
-## Objective
+## Objective: "F1 Traffic Light Page"
 
-To migrate the project logic from the previous lab work (interaction with Google Apps Script API), integrate the DaisyUI component library for UI styling, and deploy the finished web application to the Netlify platform.
-
----
-
-## Progress of Work
-
-### 1. Project Migration Based on Lab 8
-
-The work began by creating a new directory and copying the source code from the previous lab, which included a configured React application and connection to the Google Sheets API.
-
-```bash
-# Copy lab8 as a base
-xcopy /E /I LAB8\lab8 LAB9\lab9
-cd LAB9\lab9
-git init
-```
-
-### 2. Installing Tailwind CSS and DaisyUI
-
-Tailwind CSS framework and DaisyUI component plugin were selected for styling. Installation was performed using npm.
-
-```bash
-# Install Tailwind CSS and dependencies
-npm install -D tailwindcss postcss autoprefixer
-npx tailwindcss init -p
-
-# Install DaisyUI
-npm i -D daisyui@latest
-```
-
-### 3. Styling Configuration
-
-The `tailwind.config.js` file was updated to support React files and include the DaisyUI plugin.
-
-**File:** `tailwind.config.js`
-
-```javascript
-/** @type {import('tailwindcss').Config} */
-export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
-  theme: {
-    extend: {},
-  },
-  plugins: [
-    require('daisyui'),
-  ],
-  daisyui: {
-    themes: ["light", "dark", "cupcake"],
-  },
-}
-```
-
-The main stylesheet `index.css` was cleared of old CSS and updated with Tailwind directives:
-
-**File:** `index.css`
-
-```css
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-```
-
-### 4. Styling with DaisyUI
-
-Old CSS classes were replaced with Tailwind utilities and DaisyUI components.
-
-Examples:
-
-- **Buttons:** `btn`, `btn-primary`, `btn-outline`
-- **Cards:** `card`, `bg-base-100`, `shadow-xl`
-- **Layout:** `container`, `mx-auto`, `grid`, `flex`, `gap-4`
-
-Example component:
-
-```javascript
-<div className="card w-96 bg-base-100 shadow-xl">
-  <div className="card-body items-center text-center">
-    <h2 className="card-title">{light.name}</h2>
-    <div className="flex gap-2">
-      <button className="btn btn-error" onClick={() => clickColor(light.id, 'red')}>Red</button>
-      <button className="btn btn-warning" onClick={() => clickColor(light.id, 'yellow')}>Yellow</button>
-      <button className="btn btn-success" onClick={() => clickColor(light.id, 'green')}>Green</button>
-    </div>
-  </div>
-</div>
-```
-
-### 5. Deployment to Netlify
-
-The application was deployed using Netlify.
-
-Steps:
-
-1. Build the project:
-
-```bash
-npm run build
-```
-
-2. Upload the `dist` (or `build`) folder to Netlify (via drag-and-drop or GitHub integration).
-
-3. Configure redirects for React Router (if needed).
-
-4. Obtain a public URL for the deployed application.
-
-### 6. Uploading Code to GitHub Classroom
-
-After successful testing, all changes were committed and pushed to GitHub Classroom.
-
-```bash
-git add .
-git commit -m "feat: added daisyui, styled components and prepared for netlify deploy"
-git push origin main
-```
+To expand the existing "Traffic Light" project created during the semester work by adding a protected "F1 Traffic Light" page featuring an independent Formula-1 traffic light component and implementing strict synchronization with the automated car traffic light.
 
 ---
 
-## Results
+## Progress of Work and Implementation of Requirements
 
-Implemented features and improvements:
+### 1. Route and Page
+- **1.1. Create a new page:** A new React component `F1TrafficLightPage.jsx` was developed, entirely encapsulating the logic and interface for the merged traffic lights context.
+- **1.2. Add route:** A new route `/f1-traffic-light` was integrated into `App.jsx` using React Router.
+- **1.3. Restrict access:** The route is protected using the `ProtectedRoute` component, which inherently validates the verification mechanism (`AuthContext`). Unauthenticated users are appropriately denied access to the page.
 
-- **Logic Migration:** full preservation of API functionality (reading, adding, deleting traffic lights, saving clicks to Google Sheets).
-- **DaisyUI & Tailwind CSS:** UI fully rewritten using modern component-based approach without raw CSS.
-- **Responsiveness:** application works correctly on mobile and desktop devices.
-- **Deployment:** application is available online 24/7 via Netlify, all API requests work correctly, CORS issues resolved.
+### 2. Context and State Expansion
+- **2.1. Add F1 Support:** Logic was expanded through local page status arrays within `F1TrafficLightPage`, managing the car light signal (`isCarGreen`), the F1 state mapping (`f1State`: "stop" / "start"), and programmatic blocking procedures.
+- **2.2. Ensure Synchronization:** Systematic functional checks guarantee aligned operation:
+  - When the car traffic light cycles to *green*, the F1 traffic light overrides into an absolute "Stop" state and physically disables the action button.
+  - In alternate state signals (red, yellow) from the car, the F1 button regains active functional inputs.
+
+### 3. F1 Traffic Light Component
+- **3.1. Create new component:** Created a distinct graphical component `F1TrafficLight.jsx` passing logical prop states simulating exactly two visible stages: «Stop» (Red) and «Start» (Green).
+- **3.2. State mutation:** 
+  - *Automated:* Linked standard timer loops simulating interval progress (default 10s intervals) tracked by an updated UI progress bar array.
+  - *Manual:* An interactive client button was properly developed to cycle manual boolean triggers explicitly.
+- **3.3. Button constraint restrictions:** When evaluating a *Green* state on the car signal, the F1 interface invokes a `disabled` attribute directly to the toggle function, overriding visual feedback with «Stop» mechanics.
+
+### 4. UI Update
+- **4.1. Traffic Light Render:** `F1TrafficLightPage` accurately maps visual rendering representations of the car traffic light module (complete with structural durations). The F1 button maintains detailed user contexts offering constraints: *"Кнопка заблокована: авто = зелений"*.
+- **4.2. Styling:** The page provides clean user structuring built dynamically with Tailwind CSS framework semantics embedded natively directly utilizing DaisyUI component classes.
+
+### 5. Navigation
+- **5.1. Menu Item:** Configured the global `Navbar` inside the main `Header` to present a reliable hyperlink path connecting directly to the `/f1-traffic-light` destination route.
+- **5.2. Conditional Map Rendering:** This newly implemented router item strictly renders for verified users following global authentication rules correctly.
+
+### 6. Publication and Repository
+- **6.1. Publish project:** Complete source integrations (with added Web Audio API mechanics and Google Sheets DB statistics logic) were prepared effectively. Deployment securely handles protected authentication rules efficiently.
+- **6.2. Push to repository:** All operational files and examination structures were accurately published and preserved using the established remote GitHub Classroom repository standards.
+
+### 7. Report
+- Created comprehensive examination reports fully matching the institutional grading rubrics properly.
+
+---
+
+## Demonstration Screenshots:
+
+1. **Authentication Page:**
+![Screenshot Auth](./Images/auth.png)
+
+2. **Main Page with Standard Traffic Lights:**
+![Screenshot Main](./Images/main.png)
+
+3. **F1 Page - Settings and Active F1 Traffic Light:**
+![Screenshot F1](./Images/f1.png)
+
+4. **Google Sheets Data (Statistics / Auth):**
+![Screenshot Sheets](./Images/sheets.png)
+
+5. **Registration Page:**
+![Screenshot Registration](./Images/register.png)
+
+6. **Registration Error (incorrect data):**
+![Screenshot Registration Error](./Images/register_inccorect.png)
+
+7. **Login Error (incorrect password):**
+![Screenshot Incorrect Password](./Images/incorrect_password.png)
+
+8. **Home Page:**
+![Screenshot Home](./Images/home.png)
 
 ---
 
 ## Conclusions
 
-During the lab work, the following was achieved:
-
-- gained practical experience with DaisyUI and Tailwind CSS;
-- refactored the UI while preserving business logic;
-- learned the process of deploying frontend applications to Netlify;
-- reinforced skills in Git and GitHub Classroom.
-
----
+Throughout this rigorous examination development operation, all the required core criteria standards were strictly achieved. Expanding an interactive React application structure directly onto a protected routing interface successfully presented practical use of verification checks and complex component state synchronization.
 
 ## Links
 

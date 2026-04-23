@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useReducer, useCallback } from 'react'
 
-const GAS = 'https://script.google.com/macros/s/AKfycbyj3DgXUKfDEjzeWb1GpGULd1z7dwH7nhj-h_Dic0wcG0lmegQwYV8NKoF86Ae85-pBlQ/exec'
+export const GAS = 'https://script.google.com/macros/s/AKfycbxrGp_JuQytpRRAxov1IxQ8MNLiPrzz1uhSXnvYT1gzXmhnVA6VArBCQPO87AIbt8zFag/exec'
 const api = {
     getLights: () => fetch(`${GAS}?action=getAllLights`).then(r => r.json()).then(r => r.data),
     addClick: (id, color) => fetch(`${GAS}?action=addClick&id=${id}&color=${color}`).then(r => r.json()),
@@ -10,7 +10,7 @@ const api = {
     setColor: (id, color) => fetch(`${GAS}?action=setColor&id=${id}&color=${color}`).then(r => r.json()),
 }
 
-// ─── GAS повертає плоский об'єкт → конвертуємо у формат додатку ──────────────
+// Конвертація GAS → формат додатку
 function gasToLight(g) {
     return {
         id: g.id,
@@ -24,7 +24,7 @@ function gasToLight(g) {
     }
 }
 
-// ─── Defaults ─────────────────────────────────────────────────────────────────
+// Кольори за замовчуванням
 const DEFAULT_COLORS = [
     { id: 'red', label: 'Червоний', hex: '#ff3b3b', clicks: 0 },
     { id: 'yellow', label: 'Жовтий', hex: '#ffc107', clicks: 0 },
@@ -33,7 +33,7 @@ const DEFAULT_COLORS = [
 const DEFAULT_LIGHTS = [{ id: 1, name: 'Світлофор #1', orientation: 'vertical', colors: DEFAULT_COLORS }]
 const DEFAULT_SETTINGS = { blinkCount: 3, brightness: 1.0 }
 
-// ─── Reducer ──────────────────────────────────────────────────────────────────
+// Редюсер
 function reducer(state, action) {
     switch (action.type) {
         case 'INIT':
@@ -42,7 +42,6 @@ function reducer(state, action) {
         case 'ADD_LIGHT':
             return { ...state, lights: [...state.lights, action.light] }
 
-        // ДОДАНО: Оновлення тимчасового ID на справжній з бази даних
         case 'UPDATE_LIGHT_ID':
             return {
                 ...state,
@@ -78,7 +77,7 @@ function reducer(state, action) {
     }
 }
 
-// ─── Context ──────────────────────────────────────────────────────────────────
+// Контекст
 const TrafficLightsContext = createContext(null)
 
 export function TrafficLightsProvider({ children }) {
@@ -86,26 +85,23 @@ export function TrafficLightsProvider({ children }) {
         lights: [], settings: DEFAULT_SETTINGS, loading: true,
     })
 
-    // Завантаження з Google Sheets при монтуванні
+    // Завантаження з Google Sheets
     useEffect(() => {
         api.getLights()
             .then(data => dispatch({ type: 'INIT', lights: data.map(gasToLight), settings: DEFAULT_SETTINGS }))
             .catch(() => dispatch({ type: 'INIT', lights: DEFAULT_LIGHTS, settings: DEFAULT_SETTINGS }))
     }, [])
 
-    // Додати світлофор (ВИПРАВЛЕНО РОЗСИНХРОНІЗАЦІЮ ID)
-    const addLight = useCallback(async () => {
+    // Додати світлофор
+    const addLight = useCallback(async (orientation = 'vertical') => {
         const tempId = Date.now()
-        // Робимо ім'я коротшим, беручи останні 4 цифри timestamp
         const name = `Світлофор #${tempId.toString().slice(-4)}`
-        const light = { id: tempId, name, orientation: 'vertical', colors: DEFAULT_COLORS.map(c => ({ ...c })) }
+        const light = { id: tempId, name, orientation, colors: DEFAULT_COLORS.map(c => ({ ...c })) }
 
-        // Оптимістично додаємо в UI
         dispatch({ type: 'ADD_LIGHT', light })
 
         try {
-            const response = await api.createLight(name, 'vertical')
-            // Оновлюємо ID на той, що повернув Google Apps Script
+            const response = await api.createLight(name, orientation)
             if (response && response.id) {
                 dispatch({ type: 'UPDATE_LIGHT_ID', oldId: tempId, newId: response.id })
             }
@@ -118,20 +114,20 @@ export function TrafficLightsProvider({ children }) {
         try { await api.deleteLight(id) } catch { /* offline */ }
     }, [])
 
-    // Клік по кольору → +1 клік + зберігаємо в Google Sheets
+    // Клік по кольору
     const clickColor = useCallback(async (lightId, colorId) => {
         dispatch({ type: 'CLICK_COLOR', lightId, colorId })
         try { await api.addClick(lightId, colorId) } catch { /* offline */ }
     }, [])
 
-    // Перемкнути орієнтацію vertical ↔ horizontal
+    // Перемикання орієнтації
     const toggleOrientation = useCallback(async (id, currentOrientation) => {
         const newOri = currentOrientation === 'vertical' ? 'horizontal' : 'vertical'
         dispatch({ type: 'TOGGLE_ORIENTATION', id })
         try { await api.setOrientation(id, newOri) } catch { /* offline */ }
     }, [])
 
-    // Оновити налаштування (яскравість, моргання)
+    // Оновлення налаштувань
     const updateSettings = useCallback(async (data) => {
         dispatch({ type: 'UPDATE_SETTINGS', data })
     }, [])
